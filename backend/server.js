@@ -1,5 +1,5 @@
-import connectDB from "./dbConnect.js";
-import Note from "./noteSchema.js";
+import connectDB from "./dbConnect/index.js";
+import Note from "./models/noteSchema.js";
 import express from "express";
 import cors from "cors";
 

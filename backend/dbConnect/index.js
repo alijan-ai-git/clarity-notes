@@ -1,13 +1,12 @@
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
 
-const dbName = "notes-app";
 
 const connectDB = async () => {
     try {
-        const uri = `mongodb+srv://alijan998457:18102006ali@cluster0.fsyhd.mongodb.net/${dbName}?retryWrites=true&w=majority`;
-
+        const uri = `${process.env.MONGODB_URI}`;
         const connectionInstance = await mongoose.connect(uri);
-
         console.log(
             `MongoDB connected !! Host: ${connectionInstance.connection.host}`
         );
