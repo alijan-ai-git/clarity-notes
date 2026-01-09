@@ -1,17 +1,20 @@
 // auth controller with register and login funtions
 import User from "../models/userSchema.js";
+import dbConnect from "../dbConnect/index.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+dbConnect();
+
 //register user
 export const registerUser = async (req, res) => {
-    const { userName, emalil, password, fullName } = req.body;
+    const { userName, email, password, fullName } = req.body;
     try {
         const existingUser = await User.findOne({ userName });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
-        const hashedPassword = await bcrypt.hash(passsword, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({
             userName,
             email,
