@@ -3,8 +3,10 @@ import cors from "cors";
 import authRouter from "./routes/auth.route.js";
 import noteRouter from "./routes/note.route.js";
 
+
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());

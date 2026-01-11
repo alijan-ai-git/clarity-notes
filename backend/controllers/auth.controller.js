@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+
 // auth controller with register and login funtions
 import User from "../models/userSchema.js";
 import dbConnect from "../dbConnect/index.js";
@@ -5,6 +9,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 dbConnect();
+
+const JWT_SECRET = process.env.JWT_SECRET || "mysecretkey";
 
 //register user
 export const registerUser = async (req, res) => {
@@ -42,7 +48,7 @@ export const loginUser = async (req, res) => {
         }
         const token = jwt.sign(
             { userId: user._id, userName: user.userName },
-            process.env.JWT.SECRET,
+            JWT_SECRET,
             { expiresIn: "1h" },
         );
         res.status(200).json({ message: "Login successful", token });
