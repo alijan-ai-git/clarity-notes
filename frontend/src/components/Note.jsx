@@ -1,96 +1,135 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";
+
+const API = "http://localhost:3000/api/notes"; // backend API
 
 function Notes() {
   const [text, setText] = useState("");
   const [notes, setNotes] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Get headers with JWT token
+  const getHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // Fetch notes for the logged-in user
+  const fetchNotes = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return navigate("/login");
+
+    try {
+      const res = await fetch(API, { headers: getHeaders() });
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        return navigate("/login");
+      }
+      if (!res.ok) throw new Error("Failed to fetch notes");
+      const data = await res.json();
+      setNotes(data);
+    } catch (err) {
+      toast.error(err.message || "Failed to load notes");
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const res = await fetch("http://localhost:3000/notes");
-        const data = await res.json();
-        setNotes(data);
-      } catch (err) {
-        toast.error("Failed to load notes");
-        console.error(err);
-      }
-    };
     fetchNotes();
   }, []);
 
+  // Add or update a note
   const saveNote = async () => {
     if (!text.trim()) return toast.error("Cannot save empty note");
     setLoading(true);
 
     try {
+      let res, data;
+
       if (editingId) {
-        const res = await fetch(`http://localhost:3000/notes/${editingId}`, {
+        res = await fetch(`${API}/${editingId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: getHeaders(),
           body: JSON.stringify({ content: text }),
         });
-        const updated = await res.json();
-        setNotes(notes.map(n => (n._id === editingId ? updated : n)));
+        if (!res.ok) throw new Error("Failed to update note");
+        data = await res.json();
+        setNotes(notes.map((n) => (n._id === editingId ? data : n)));
         toast.success("Note updated");
         setEditingId(null);
       } else {
-        const res = await fetch("http://localhost:3000/notes", {
+        res = await fetch(API, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getHeaders(),
           body: JSON.stringify({ content: text }),
         });
-        const newNote = await res.json();
-        setNotes([...notes, newNote]);
+        if (!res.ok) throw new Error("Failed to add note");
+        data = await res.json();
+        setNotes([...notes, data]);
         toast.success("Note added");
       }
+
       setText("");
     } catch (err) {
+      toast.error(err.message || "Operation failed");
       console.error(err);
-      toast.error("Operation failed");
     } finally {
       setLoading(false);
     }
   };
 
+  // Delete a note
   const deleteNote = async (id) => {
     if (!window.confirm("Delete this note?")) return;
+
     const oldNotes = [...notes];
-    setNotes(notes.filter(n => n._id !== id));
+    setNotes(notes.filter((n) => n._id !== id));
+
     try {
-      const res = await fetch(`http://localhost:3000/notes/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+        headers: getHeaders(),
+      });
       if (!res.ok && res.status !== 204) throw new Error("Delete failed");
       toast.success("Note deleted");
     } catch (err) {
       setNotes(oldNotes);
-      toast.error("Failed to delete note");
+      toast.error(err.message || "Failed to delete note");
       console.error(err);
     }
   };
 
+  // Start editing a note
   const editNote = (note) => {
     setEditingId(note._id);
     setText(note.content);
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingId(null);
+    setText("");
   };
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#eef1f5] via-[#f7f8fa] to-[#ffffff] font-sans overflow-hidden">
       <Toaster position="top-right" />
 
-      {/* Ambient light */}
+      {/* Ambient lights */}
       <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-purple-300/30 rounded-full blur-[120px]" />
       <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-blue-300/30 rounded-full blur-[120px]" />
 
       {/* Header */}
       <header className="relative z-10 max-w-5xl mx-auto px-6 pt-10 pb-6">
-        <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">
-          Notes
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Clear mind. Clear thoughts.
-        </p>
+        <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">Notes</h1>
+        <p className="text-gray-600 mt-1">Clear mind. Clear thoughts.</p>
       </header>
 
       {/* Composer */}
@@ -111,6 +150,15 @@ function Notes() {
           >
             {editingId ? "Update" : "Add"}
           </button>
+          {editingId && (
+            <button
+              onClick={cancelEdit}
+              disabled={loading}
+              className="px-5 py-2 rounded-2xl bg-gray-200 text-gray-800 text-sm font-medium hover:bg-gray-300 transition"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
@@ -122,9 +170,7 @@ function Notes() {
               key={note._id}
               className="group p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/30 shadow-[0_15px_30px_rgba(0,0,0,0.12)] transition hover:scale-[1.02]"
             >
-              <p className="text-gray-900 leading-relaxed mb-6">
-                {note.content}
-              </p>
+              <p className="text-gray-900 leading-relaxed mb-6">{note.content}</p>
 
               <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
                 <button

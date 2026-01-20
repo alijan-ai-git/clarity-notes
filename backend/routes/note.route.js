@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { getNotes, createNote, updateNote, deleteNote } from "../controllers/note.controller.js";
+import { verifyToken } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.get("/notes", getNotes);
-router.post("/notes", createNote);
-router.put("/notes/:id", updateNote);
-router.delete("/notes/:id", deleteNote);
+router.use(verifyToken);
+
+router.get("/", getNotes);
+router.post("/", createNote);
+router.put("/:id", updateNote);
+router.delete("/:id", deleteNote);
 
 export default router;

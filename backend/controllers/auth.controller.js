@@ -1,14 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
-
-
 // auth controller with register and login funtions
 import User from "../models/userSchema.js";
-import dbConnect from "../dbConnect/index.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-dbConnect();
 
 const JWT_SECRET = process.env.JWT_SECRET || "mysecretkey";
 
