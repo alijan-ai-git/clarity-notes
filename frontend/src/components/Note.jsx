@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";
 
-const API = "http://localhost:3000/api/notes"; // backend API
+const API = "http://localhost:5000/api/notes"; // backend API
 
 function Notes() {
   const [text, setText] = useState("");

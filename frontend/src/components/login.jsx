@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 function login() {
     const { login } = useAuth();
-    const [email, setEmail] = useState("");
+    const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -13,7 +13,7 @@ function login() {
         e.preventDefault();
         setLoading(true);
         try {
-            const data = await loginUser(email, password);
+            const data = await loginUser(userName, password);
             login(data.user, data.token);
             toast.success("Logged in successfully!");
         } catch (err) {
@@ -27,11 +27,12 @@ function login() {
         <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
             <h2 className="text-2xl font-semibold mb-4">Login</h2>
             <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Username"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
                 className="w-full mb-3 p-2 border rounded"
+                autoComplete="userName"
                 required
             />
             <input
@@ -40,15 +41,15 @@ function login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full mb-3 p-2 border rounded"
+                autoComplete="password"
                 required
             />
             <button type="submit" disabled={loading} className="w-full py-2 bg-black text-white rounded">
                 {loading ? "Logging in..." : "Login"}
             </button>
-            // link to register page
-
+            <p className="">Don't have an account? <a href="/register">Sign Up</a></p>
         </form>
     );
 }
 
-export default Login;
+export default login;
